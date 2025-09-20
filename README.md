@@ -1,0 +1,1 @@
+Flutter calculator app for everyday math and full-blown scientific mode. Clean Material 3 UI, dark/light themes, history, memory keys, angle units (DEG/RAD), percentages, fractions, expression parser, and haptic feedback. Fast, offline, tested. Open source—perfect for students, devs, and daily use
