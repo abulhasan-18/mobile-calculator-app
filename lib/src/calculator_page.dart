@@ -4,7 +4,16 @@ import 'package:math_expressions/math_expressions.dart';
 import 'widgets/calc_button.dart';
 
 class CalculatorPage extends StatefulWidget {
-  const CalculatorPage({super.key});
+  const CalculatorPage({
+    super.key,
+    required this.themeMode,
+    required this.onToggleTheme,
+    required this.onSystemTheme,
+  });
+
+  final ThemeMode themeMode;
+  final VoidCallback onToggleTheme; // tap: light<->dark
+  final VoidCallback onSystemTheme; // long-press: back to system
 
   @override
   State<CalculatorPage> createState() => _CalculatorPageState();
@@ -93,13 +102,39 @@ class _CalculatorPageState extends State<CalculatorPage> {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    IconData themeIcon() {
+      // show icon based on *effective* theme
+      if (widget.themeMode == ThemeMode.system) {
+        return isDark ? Icons.brightness_2 : Icons.brightness_5; // moon/sun-ish
+      }
+      return (widget.themeMode == ThemeMode.dark)
+          ? Icons.dark_mode
+          : Icons.light_mode;
+    }
+
+    String themeTooltip() {
+      final m = widget.themeMode;
+      return m == ThemeMode.system
+          ? 'Theme: System (tap to toggle, long-press to keep System)'
+          : 'Theme: ${m == ThemeMode.dark ? "Dark" : "Light"} (tap to toggle, long-press System)';
+    }
+
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
-        title: const Text('CALCULUS'),
+        title: const Text('CALC PRO'),
         centerTitle: true,
         scrolledUnderElevation: 0,
         actions: [
+          // THEME TOGGLE (near the scientific icon)
+          GestureDetector(
+            onLongPress: widget.onSystemTheme, // long-press -> system
+            child: IconButton(
+              tooltip: themeTooltip(),
+              icon: Icon(themeIcon()),
+              onPressed: widget.onToggleTheme, // tap -> light<->dark
+            ),
+          ),
           // Scientific toggle
           IconButton(
             tooltip: _showScientific ? 'Hide scientific' : 'Show scientific',
@@ -373,10 +408,15 @@ class _MainPad extends StatelessWidget {
   }
 }
 
-class _BottomHints extends StatelessWidget {
+class _BottomHints extends StatefulWidget {
   final bool isDark;
   const _BottomHints({required this.isDark});
 
+  @override
+  State<_BottomHints> createState() => _BottomHintsState();
+}
+
+class _BottomHintsState extends State<_BottomHints> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme.labelSmall;

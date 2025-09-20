@@ -43,9 +43,36 @@ class _CalcButtonState extends State<CalcButton> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final shortest = constraints.biggest.shortestSide;
-        // label ~ 34% of the button’s shortest side — feels balanced on phones/tablets
-        final fs = (shortest * 0.34).clamp(14.0, 26.0);
+        final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
+
+        // Size text based on actual box; clamp for sanity.
+        final fs = (0.42 * (w < h ? w : h)).clamp(14.0, 28.0);
+
+        // Remove big fixed paddings; let the box height breathe.
+        final content = Center(
+          child: Text(
+            widget.label,
+            locale: const Locale('en'), // ensure Latin digits here too
+            textAlign: TextAlign.center,
+            textHeightBehavior: const TextHeightBehavior(
+              applyHeightToFirstAscent: true,
+              applyHeightToLastDescent: true,
+              leadingDistribution: TextLeadingDistribution.even,
+            ),
+            style: TextStyle(
+              fontSize: fs,
+              height: 1.0, // no extra line gap → no crop
+              fontWeight: FontWeight.w700,
+              color: fg,
+              letterSpacing: 0.2,
+            ),
+          ),
+        );
+
+        // Lock OS text scaling just for labels so they never overflow.
+        final mq = MediaQuery.of(context);
+        final noScale = mq.copyWith(textScaler: const TextScaler.linear(1.0));
 
         return AnimatedScale(
           duration: const Duration(milliseconds: 90),
@@ -79,21 +106,7 @@ class _CalcButtonState extends State<CalcButton> {
                   setState(() => _pressed = false);
                   widget.onTap();
                 },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  child: Center(
-                    child: Text(
-                      widget.label,
-                      // responsive font size here
-                      style: TextStyle(
-                        fontSize: fs,
-                        fontWeight: FontWeight.w700,
-                        color: fg,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                ),
+                child: MediaQuery(data: noScale, child: content),
               ),
             ),
           ),
